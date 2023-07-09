@@ -4,6 +4,8 @@ import {
   signInWithRedirect,
   signInWithPopup,
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
 } from 'firebase/auth';
 
 import {
@@ -25,9 +27,9 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 
-const provider = new GoogleAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 
-provider.setCustomParameters({
+googleProvider.setCustomParameters({
   prompt: 'select_account',
 });
 
@@ -37,35 +39,56 @@ export const createUserProfileDocument = async (userAuth, additionalData) => {
   createUserDocumentFromAuth(userAuth);
 };
 
-export const auth = getAuth();
-export const signInWithGooglePopup = () => signInWithPopup(auth, provider);
+//What is our Auth?
+//the auth is a singleton because it keeps track of the authentication state of the entire application as the user signs in through different 
+//means and methods.We need some way to be certain of what it is that the user has done, especially in the framework of 
+//this browser, where whenever you navigate away from your website, you are breaking the instance of the website now.
+//So this off is the only way we can keep track of whether or not users are properly authenticating or not. And that's what's great about this service of Firebase.
+
+export const auth = getAuth(); 
+export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
 
 export const db = getFirestore(); //this actually directly points to our database inside the console
 
 //to use the above db we need to create some method 
 
-const createUserDocumentFromAuth = async (userAuth) => {
-   
-   const userDocRef = doc(db, 'users', userAuth.uid);
-   console.log(userDocRef);
+export const createUserDocumentFromAuth = async (
+  userAuth,
+  additionalInformation = {}
+) => {
+  if (!userAuth) return;
 
-   const userSnapshot = await getDoc(userDocRef);
-   console.log(userSnapshot);
-   console.log(userSnapshot.data);
-   console.log(userSnapshot.exists());
+  const userDocRef = doc(db, 'users', userAuth.uid);
 
-   if( !userSnapshot.exists() ) {
-    const { name, email } = userAuth;
+  const userSnapshot = await getDoc(userDocRef);
+
+  if (!userSnapshot.exists()) {
+    const { displayName, email } = userAuth;
     const createdAt = new Date();
 
     try {
-      console.log(name + ' ' + email + ' createdAt ' + createdAt);
-      await setDoc(userDocRef, {name, email, createdAt});
-  
+      await setDoc(userDocRef, {
+        displayName,
+        email,
+        createdAt,
+        ...additionalInformation,
+      });
     } catch (error) {
-      console.log('!Erorr creating the user: ' + error.message);
+      console.log('error creating the user', error.message);
     }
   }
 
   return userDocRef;
-}
+};
+
+export const createAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) return;
+
+  return await createUserWithEmailAndPassword(auth, email, password);
+};
+
+export const signInAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) return;
+
+  return await signInWithEmailAndPassword(auth, email, password);
+};
