@@ -2,7 +2,6 @@ import './product-card.styles.scss';
 import Button from '../button/button.component';
 
 import { useContext } from 'react';
-
 import { CartContext } from '../../contexts/cart.context';
 
 const ProductCard = ({product}) =>{
@@ -10,8 +9,7 @@ const ProductCard = ({product}) =>{
 
     const {addItemToCart} = useContext(CartContext);
 
-    const addToCart = addItemToCart(product);
-
+    const addProductToCart =() => addItemToCart(product); //i missed the () = > and got error
     return (
 
         <div className='product-card-container'>
@@ -20,7 +18,7 @@ const ProductCard = ({product}) =>{
             <span className='name'>{name}</span>
             <span className='price'>{price}</span>
            </div>
-           <Button buttonType='inverted' onClick={addToCart}>Add to cart</Button>
+           <Button buttonType='inverted' onClick={addProductToCart}>Add to cart</Button>
         </div>
     );
 }
